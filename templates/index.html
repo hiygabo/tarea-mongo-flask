@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Despensa | Productos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Inicio">
+                <span class="brand-mark">+</span>
+                <span>despensa<span class="brand-dot">.</span></span>
+            </a>
+            <div class="connection-status"><span class="status-dot" id="status-dot"></span><span id="status-label">Comprobando conexión</span></div>
+        </header>
+
+        <main>
+            <section class="intro">
+                <div>
+                    <p class="eyebrow">Inventario / Productos</p>
+                    <h1>Todo tu surtido,<br><em>en orden.</em></h1>
+                    <p class="intro-copy">Administra los productos de tu supermercado desde un solo lugar.</p>
+                </div>
+                <div class="intro-count"><strong id="product-count">0</strong><span>productos<br>registrados</span></div>
+            </section>
+
+            <section class="workspace" aria-label="Gestion de productos">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Catálogo</p>
+                        <h2>Productos</h2>
+                    </div>
+                    <button class="button button-primary" id="new-product-button" type="button"><span class="button-icon">+</span> Nuevo producto</button>
+                </div>
+
+                <div class="toolbar">
+                    <label class="search-box" for="search-input">
+                        <span aria-hidden="true">⌕</span>
+                        <input id="search-input" type="search" placeholder="Buscar por nombre o proveedor" autocomplete="off">
+                    </label>
+                    <span class="results-label" id="results-label">Cargando...</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Producto</th><th>Presentación</th><th>Proveedor</th><th>Precio</th><th class="actions-heading">Acciones</th></tr>
+                        </thead>
+                        <tbody id="products-body"></tbody>
+                    </table>
+                    <div class="empty-state" id="empty-state" hidden>
+                        <span class="empty-icon">◌</span>
+                        <h3 id="empty-title">Todavía no hay productos</h3>
+                        <p id="empty-copy">Crea el primer producto para comenzar tu catálogo.</p>
+                        <button class="button button-secondary" id="empty-action" type="button">Crear producto</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="queries-section" aria-label="Consultas MongoDB">
+                <div class="section-heading queries-heading">
+                    <div>
+                        <p class="eyebrow">Práctica MongoDB</p>
+                        <h2>Consultas por grupo</h2>
+                    </div>
+                    <span class="queries-note">Selecciona una consulta para ejecutarla sobre tu colección.</span>
+                </div>
+                <div class="query-groups" id="query-groups"></div>
+                <section class="query-result" id="query-result" hidden>
+                    <div class="result-heading"><div><p class="eyebrow" id="query-result-group">Resultado</p><h3 id="query-result-title"></h3></div><button class="icon-button" id="close-query-result" type="button" aria-label="Cerrar resultado">×</button></div>
+                    <pre id="query-result-data"></pre>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-backdrop" id="modal-backdrop" hidden>
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="modal-close" id="close-modal" type="button" aria-label="Cerrar">×</button>
+            <p class="eyebrow" id="modal-eyebrow">Nuevo registro</p>
+            <h2 id="modal-title">Añadir producto</h2>
+            <p class="modal-copy">Completa los datos del producto para incorporarlo al catálogo.</p>
+            <form id="product-form">
+                <div class="form-grid">
+                    <label>Nombre<input name="nombre" type="text" placeholder="Ej. Aceite" required></label>
+                    <label>Proveedor<input name="proveedor" type="text" placeholder="Ej. Molino" required></label>
+                    <label>Precio<input name="precio" type="number" min="0" step="0.01" placeholder="0.00" required></label>
+                    <label>Unidad<input name="unidad" type="text" placeholder="Ej. Lt" required></label>
+                    <label class="quantity-field">Cantidad<input name="cantidad" type="number" min="0" step="0.01" placeholder="1" required></label>
+                </div>
+                <p class="form-error" id="form-error" role="alert" hidden></p>
+                <div class="form-actions"><button class="button button-secondary" id="cancel-modal" type="button">Cancelar</button><button class="button button-primary" id="save-button" type="submit">Guardar producto</button></div>
+            </form>
+        </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

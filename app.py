@@ -82,35 +82,16 @@ def listar_productos():
 
 CONSULTAS = {
 	"G1": [
-		{"titulo": "Mostrar la base de datos", "descripcion": "Consulta la base de datos activa."},
-		{"titulo": "Mostrar colecciones", "descripcion": "Lista las colecciones de la base de datos."},
-		{"titulo": "Todos los productos", "descripcion": "Equivalente a db.producto.find()."},
-		{"titulo": "Productos con formato", "descripcion": "Equivalente a db.producto.find().pretty()."},
-		{"titulo": "Producto Pollo", "descripcion": "Busca productos cuyo nombre sea Pollo."},
-		{"titulo": "Proveedor Molino", "descripcion": "Busca productos del proveedor Molino."},
+		{"titulo": "Todos los productos", "descripcion": "Ejecuta db.producto.find() y devuelve todos los documentos."},
 	],
 	"G2": [
-		{"titulo": "Presentación en gramos", "descripcion": "Busca productos con unidad Grs en el objeto embebido."},
-		{"titulo": "Tiene proveedor", "descripcion": "Verifica que exista el atributo proveedor."},
-		{"titulo": "Sin proveedor", "descripcion": "Busca documentos donde proveedor no exista."},
-		{"titulo": "Precio mayor o igual a 5", "descripcion": "Filtra productos con precio >= 5."},
-		{"titulo": "Precio entre 3 y 7", "descripcion": "Filtra productos con precio >= 3 y <= 7."},
+		{"titulo": "Precio mayor o igual a 5", "descripcion": "Filtra productos usando precio: { $gte: 5 }."},
 	],
 	"G3": [
-		{"titulo": "Nombres que empiezan con C", "descripcion": "Usa una expresión regular para buscar nombres que comiencen por C."},
-		{"titulo": "Solo nombre", "descripcion": "Proyección que devuelve únicamente nombre."},
-		{"titulo": "Nombre y precio", "descripcion": "Proyección que devuelve nombre y precio."},
-		{"titulo": "Todos excepto proveedor", "descripcion": "Proyección que excluye el atributo proveedor."},
-		{"titulo": "Condición OR", "descripcion": "Precio >= 1 o nombre mayor o igual que M."},
+		{"titulo": "Nombres que empiezan con C", "descripcion": "Filtra nombres usando $regex: ^C."},
 	],
 	"G4": [
 		{"titulo": "Condición AND", "descripcion": "Productos con precio >= 1 y nombre mayor o igual que M."},
-		{"titulo": "Nombres que empiezan con C", "descripcion": "Usa $regex ^C para filtrar nombres."},
-		{"titulo": "Nombres que terminan en o", "descripcion": "Usa $regex o$ para filtrar nombres."},
-		{"titulo": "Suma de precios", "descripcion": "Calcula el total usando $sum sobre precio."},
-		{"titulo": "Promedio de precios", "descripcion": "Calcula el promedio usando $avg sobre precio."},
-		{"titulo": "Precio máximo", "descripcion": "Obtiene el mayor precio usando $max."},
-		{"titulo": "Precio mínimo", "descripcion": "Obtiene el menor precio usando $min."},
 	],
 }
 
@@ -127,50 +108,13 @@ def ejecutar_consulta(grupo: str, numero: int):
 		return jsonify({"error": "Consulta no encontrada"}), 404
 
 	if grupo == "G1":
-		if numero == 1:
-			resultado = {"base_de_datos": MONGO_DB}
-		elif numero == 2:
-			resultado = {"colecciones": mongo_client[MONGO_DB].list_collection_names()}
-		elif numero in (3, 4):
-			resultado = list(productos.find())
-		elif numero == 5:
-			resultado = list(productos.find({"nombre": "Pollo"}))
-		else:
-			resultado = list(productos.find({"proveedor": "Molino"}))
+		resultado = list(productos.find())
 	elif grupo == "G2":
-		filtros = {
-			1: {"presentacion.unidad": "Grs"},
-			2: {"proveedor": {"$exists": True}},
-			3: {"proveedor": {"$exists": False}},
-			4: {"precio": {"$gte": 5}},
-			5: {"precio": {"$gte": 3, "$lte": 7}},
-		}
-		resultado = list(productos.find(filtros[numero]))
+		resultado = list(productos.find({"precio": {"$gte": 5}}))
 	elif grupo == "G3":
-		if numero == 1:
-			resultado = list(productos.find({"nombre": {"$regex": "^C", "$options": "i"}}))
-		elif numero == 2:
-			resultado = list(productos.find({}, {"_id": 0, "nombre": 1}))
-		elif numero == 3:
-			resultado = list(productos.find({}, {"_id": 0, "nombre": 1, "precio": 1}))
-		elif numero == 4:
-			resultado = list(productos.find({}, {"proveedor": 0}))
-		else:
-			resultado = list(productos.find({"$or": [{"precio": {"$gte": 1}}, {"nombre": {"$gte": "M"}}]}))
+		resultado = list(productos.find({"nombre": {"$regex": "^C", "$options": "i"}}))
 	else:
-		if numero == 1:
-			resultado = list(productos.find({"$and": [{"precio": {"$gte": 1}}, {"nombre": {"$gte": "M"}}]}))
-		elif numero == 2:
-			resultado = list(productos.find({"nombre": {"$regex": "^C", "$options": "i"}}))
-		elif numero == 3:
-			resultado = list(productos.find({"nombre": {"$regex": "o$", "$options": "i"}}))
-		else:
-			operadores = {4: ("suma", "$sum"), 5: ("promedio", "$avg"), 6: ("maximo", "$max"), 7: ("minimo", "$min")}
-			campo, operador = operadores[numero]
-			resultado = list(productos.aggregate([
-				{"$group": {"_id": None, campo: {operador: "$precio"}}},
-				{"$project": {"_id": 0}},
-			]))
+		resultado = list(productos.find({"$and": [{"precio": {"$gte": 1}}, {"nombre": {"$gte": "M"}}]}))
 
 	return jsonify({
 		"grupo": grupo,

@@ -36,10 +36,15 @@ function showToast(message) {
 }
 
 async function request(url, options = {}) {
-    const response = await fetch(url, {
-        headers: { "Content-Type": "application/json" },
-        ...options,
-    });
+    let response;
+    try {
+        response = await fetch(url, {
+            headers: { "Content-Type": "application/json" },
+            ...options,
+        });
+    } catch (error) {
+        throw new Error("No se pudo conectar con Flask. Ejecuta 'python app.py' y abre http://127.0.0.1:5001/");
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || "No se pudo completar la operación");
     return data;
@@ -146,36 +151,60 @@ async function loadQueryGroups() {
             const heading = document.createElement("button");
             heading.type = "button";
             heading.className = "query-group-heading";
-            heading.setAttribute("aria-expanded", "false");
-            heading.innerHTML = `<span class="group-tag">${groupName}</span><span class="group-summary"><span>${queries.length} consultas</span><span class="group-chevron">+</span></span>`;
-            const list = document.createElement("div");
-            list.className = "query-list";
-            list.hidden = true;
-            heading.addEventListener("click", () => {
-                const isOpen = !list.hidden;
-                document.querySelectorAll(".query-group .query-list").forEach((otherList) => {
-                    otherList.hidden = true;
-                    otherList.previousElementSibling.setAttribute("aria-expanded", "false");
-                    otherList.previousElementSibling.querySelector(".group-chevron").textContent = "+";
-                });
-                list.hidden = isOpen;
-                heading.setAttribute("aria-expanded", String(!isOpen));
-                heading.querySelector(".group-chevron").textContent = isOpen ? "+" : "−";
-            });
-            queries.forEach((query, index) => {
-                const button = document.createElement("button");
-                button.type = "button";
-                button.className = "query-button";
-                button.innerHTML = `<span class="query-number">${index + 1}</span><span><strong>${query.titulo}</strong><small>${query.descripcion}</small></span><span class="query-arrow">→</span>`;
-                button.addEventListener("click", () => executeQuery(groupName, index + 1, button));
-                list.append(button);
-            });
-            group.append(heading, list);
+            const query = queries[0];
+            heading.innerHTML = `<span class="group-tag">${groupName}</span><span class="group-query"><strong>${query.titulo}</strong><small>${query.descripcion}</small></span><span class="query-arrow">→</span>`;
+            heading.addEventListener("click", () => executeQuery(groupName, 1, heading));
+            group.append(heading);
             elements.queryGroups.append(group);
         });
     } catch (error) {
         elements.queryGroups.textContent = error.message;
     }
+}
+
+function formatQueryValue(value) {
+    if (value === null || value === undefined) return "-";
+    if (typeof value === "object") {
+        if ("cantidad" in value && "unidad" in value) return `${value.cantidad} ${value.unidad}`;
+        return Object.entries(value).map(([key, item]) => `${key}: ${item}`).join(", ");
+    }
+    return String(value);
+}
+
+function renderQueryResult(result) {
+    elements.queryResultData.replaceChildren();
+    if (!Array.isArray(result) || result.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "query-empty-result";
+        empty.textContent = "La consulta no devolvió productos.";
+        elements.queryResultData.append(empty);
+        return;
+    }
+
+    const columns = [...new Set(result.flatMap((item) => Object.keys(item)).filter((key) => key !== "_id"))];
+    const table = document.createElement("table");
+    table.className = "query-result-table";
+    const header = document.createElement("tr");
+    columns.forEach((column) => {
+        const cell = document.createElement("th");
+        cell.textContent = column === "presentacion" ? "Presentación" : column;
+        header.append(cell);
+    });
+    const tableHead = document.createElement("thead");
+    tableHead.append(header);
+    table.append(tableHead);
+    const body = document.createElement("tbody");
+    result.forEach((item) => {
+        const row = document.createElement("tr");
+        columns.forEach((column) => {
+            const cell = document.createElement("td");
+            cell.textContent = formatQueryValue(item[column]);
+            row.append(cell);
+        });
+        body.append(row);
+    });
+    table.append(body);
+    elements.queryResultData.append(table);
 }
 
 async function executeQuery(group, number, button) {
@@ -186,7 +215,7 @@ async function executeQuery(group, number, button) {
         const response = await request(`/consultas/${group}/${number}`);
         elements.queryResultGroup.textContent = `${response.grupo} / Consulta ${response.consulta}`;
         elements.queryResultTitle.textContent = response.titulo;
-        elements.queryResultData.textContent = JSON.stringify(response.resultado, null, 2);
+        renderQueryResult(response.resultado);
         elements.queryResult.hidden = false;
         elements.queryResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (error) {

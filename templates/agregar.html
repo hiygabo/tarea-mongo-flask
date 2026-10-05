@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-4">Agregar Producto</h2>
+<form method="POST">
+    <div class="mb-3">
+
+        <label class="form-label">
+            Nombre
+        </label>
+        <input
+            type="text"
+            name="nombre"
+            class="form-control"
+            placeholder="Ej: Aceite"
+            required>
+
+    </div>
+    <h5>Presentación</h5>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">
+                Cantidad
+            </label>
+            <input
+                type="number"
+                name="cantidad"
+                class="form-control"
+                placeholder="Ej: 900"
+                required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">
+                Unidad
+            </label>
+            <select
+                name="unidad"
+                class="form-select"
+                required>
+                <option value="">Seleccione</option>
+                <option value="Ml">
+                    Ml
+                </option>
+                <option value="L">
+                    L
+                </option>
+                <option value="Gr">
+                    Gr
+                </option>
+                <option value="Kg">
+                    Kg
+                </option>
+                <option value="Unidad">
+                    Unidad
+                </option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">
+            Precio
+        </label>
+        <input
+            type="number"
+            name="precio"
+            class="form-control"
+            step="0.01"
+            min="0"
+            placeholder="Ej: 4"
+            required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">
+            Proveedor
+        </label>
+        <input
+            type="text"
+            name="proveedor"
+            class="form-control"
+            placeholder="Ej: Molino"
+            required>
+    </div>
+    <button
+        type="submit"
+        class="btn btn-success">
+        Guardar Producto
+    </button>
+    <a
+        href="{{ url_for('index') }}"
+        class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+{% endblock %}

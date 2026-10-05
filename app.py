@@ -11,8 +11,8 @@ from pymongo.collection import Collection
 app = Flask(__name__)
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-MONGO_DB = os.getenv("MONGO_DB", "bd_supermercado")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "producto")
+MONGO_DB = "DBSupermercado"
+MONGO_COLLECTION = "Producto"
 
 mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
 productos: Collection = mongo_client[MONGO_DB][MONGO_COLLECTION]
@@ -82,7 +82,7 @@ def listar_productos():
 
 CONSULTAS = {
 	"G1": [
-		{"titulo": "Todos los productos", "descripcion": "Ejecuta db.producto.find() y devuelve todos los documentos."},
+		{"titulo": "Todos los productos", "descripcion": "Ejecuta db.Producto.find() y devuelve todos los documentos."},
 	],
 	"G2": [
 		{"titulo": "Precio mayor o igual a 5", "descripcion": "Filtra productos usando precio: { $gte: 5 }."},
@@ -92,6 +92,9 @@ CONSULTAS = {
 	],
 	"G4": [
 		{"titulo": "Condición AND", "descripcion": "Productos con precio >= 1 y nombre mayor o igual que M."},
+	],
+	"G5": [
+		{"titulo": "Buscar en subconjunto", "descripcion": 'Filtra por nombre usando $in: "Pollo" o "Pasta Larga".'},
 	],
 }
 
@@ -113,8 +116,10 @@ def ejecutar_consulta(grupo: str, numero: int):
 		resultado = list(productos.find({"precio": {"$gte": 5}}))
 	elif grupo == "G3":
 		resultado = list(productos.find({"nombre": {"$regex": "^C", "$options": "i"}}))
-	else:
+	elif grupo == "G4":
 		resultado = list(productos.find({"$and": [{"precio": {"$gte": 1}}, {"nombre": {"$gte": "M"}}]}))
+	else:
+		resultado = list(productos.find({"nombre": {"$in": ["Pollo", "Pasta Larga"]}}))
 
 	return jsonify({
 		"grupo": grupo,
